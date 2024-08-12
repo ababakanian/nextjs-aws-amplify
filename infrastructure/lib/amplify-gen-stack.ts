@@ -29,7 +29,7 @@ export class AmplifyStack extends Stack {
         ],
       }),
       sourceCodeProvider: new amplify.GitHubSourceCodeProvider({
-        oauthToken: props.githubOauthToken, // replace GITHUB_TOKEN_KEY by the name of the Secrets Manager resource storing your GitHub token
+        oauthToken: props.githubOauthToken,
         owner: props.repoOwner,
         repository: props.repoName,
       }),
@@ -42,7 +42,6 @@ export class AmplifyStack extends Stack {
               phases: {
                 preBuild: {
                   commands: [
-                    // Install the correct Node version, defined in .nvmrc
                     "nvm install",
                     "nvm use",
                     "export NODE_OPTIONS=--max-old-space-size=8192",
@@ -69,22 +68,20 @@ export class AmplifyStack extends Stack {
     const cfnApp = amplifyApp.node.defaultChild as CfnApp
     cfnApp.platform = "WEB_COMPUTE"
 
-    // Attach your main branch and define the branch settings (see below)
     const mainBranch = amplifyApp.addBranch("main", {
-      autoBuild: true, // set to true to automatically build the app on new pushes
+      autoBuild: true,
       stage: "PRODUCTION",
     })
 
     const domain = amplifyApp.addDomain(props.domain, {
-      enableAutoSubdomain: true, // in case subdomains should be auto registered for branches
+      enableAutoSubdomain: true,
     })
-    domain.mapRoot(mainBranch) // map main branch to domain root
+    domain.mapRoot(mainBranch)
     domain.mapSubDomain(mainBranch, "www")
 
     const cfnBranch = mainBranch.node.defaultChild as CfnBranch
     cfnBranch.framework = "Next.js - SSR"
 
-    // Output the Amplify App URL
     new CfnOutput(this, "AmplifyAppURL", {
       value: `https://main.${amplifyApp.defaultDomain}`,
       description: "Amplify App URL",
